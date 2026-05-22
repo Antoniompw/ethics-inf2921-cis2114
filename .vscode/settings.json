@@ -1,0 +1,48 @@
+{
+  // ── LaTeX Workshop ───────────────────────────────────────────────
+  "latex-workshop.latex.outDir": "%DIR%/build",
+  "latex-workshop.latex.autoBuild.run": "onSave",
+
+  // Recipe: pdflatex × 2 only (no bibtex while bibliography is commented out)
+  "latex-workshop.latex.recipes": [
+    {
+      "name": "pdflatex",
+      "tools": ["pdflatex", "pdflatex"]
+    },
+    {
+      "name": "pdflatex + bibtex",
+      "tools": ["pdflatex", "bibtex", "pdflatex", "pdflatex"]
+    }
+  ],
+
+  "latex-workshop.latex.recipe.default": "pdflatex",
+
+  "latex-workshop.latex.tools": [
+    {
+      "name": "pdflatex",
+      "command": "pdflatex",
+      "args": [
+        "-synctex=1",
+        "-interaction=nonstopmode",
+        "-halt-on-error",
+        "-output-directory=%OUTDIR%",
+        "%DOC%"
+      ]
+    },
+    {
+      "name": "bibtex",
+      "command": "bibtex",
+      "args": ["%OUTDIR%/%DOCFILE%"]
+    }
+  ],
+
+  // Show the compiled PDF in the side panel
+  "latex-workshop.view.pdf.viewer": "tab",
+
+  // Cleaner: also remove build artefacts on clean
+  "latex-workshop.latex.clean.fileTypes": [
+    "*.aux", "*.bbl", "*.blg", "*.fdb_latexmk",
+    "*.fls", "*.log", "*.out", "*.toc", "*.synctex.gz"
+  ],
+  "latex-workshop.latex.clean.subfolder.enabled": true
+}
