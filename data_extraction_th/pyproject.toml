@@ -10,4 +10,8 @@ dependencies = [
     "dotenv",
     "pypdf",
     "chromadb",
+    "uvicorn",
+    "langchain",
+    "langchain-google-genai",
+    "langchain-chroma",
 ]
