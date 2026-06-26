@@ -1,19 +1,3 @@
-"""Agente RAG multimodal: recupera as páginas top-k do vector store e gera
-uma resposta embasada nas páginas (PDF como contexto), com links de citação
-no formato `arquivo.pdf#page=N`.
-
-Uso típico no notebook:
-
-    from agent import answer_question
-    resposta = answer_question(
-        vector_store,
-        client,
-        "Quais são os sintomas de hipoglicemia?",
-        source="Livro_GuiaRapido-DiabetesMellitus_PDFDigital_20231113.pdf",
-        k=3,
-    )
-    print(resposta.as_markdown())
-"""
 
 from __future__ import annotations
 
