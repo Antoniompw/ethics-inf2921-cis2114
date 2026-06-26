@@ -1,3 +1,4 @@
 # LaTeX build outputs
 report/build/
 ~report/build/main.pdf
+.env

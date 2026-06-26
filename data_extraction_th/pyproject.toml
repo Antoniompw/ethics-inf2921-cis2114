@@ -1,0 +1,22 @@
+[project]
+name = "guia-rapido"
+version = "0.1.0"
+description = "description"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "google-genai",
+    "fastapi",
+    "dotenv",
+    "pypdf",
+    "chromadb",
+    "uvicorn",
+    "langchain",
+    "langchain-google-genai",
+    "langchain-chroma",
+]
+
+[dependency-groups]
+dev = [
+    "ipykernel>=7.3.0",
+]
