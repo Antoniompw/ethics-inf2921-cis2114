@@ -26,14 +26,14 @@
 % ---------- Metadados --------------------------------------
 \title{Sistema de Recuperação Rápida de Informações\\
        em Protocolos de Saúde do SUS\\
-       {\large Relatório de Detalhamento --- Rumo ao TRL~1}}
+       {\large Relatório de Detalhamento}}
 
 \author{
   \IEEEauthorblockN{Antônio Moreira Pinto, Celso Sacramento,
     João Pedro Porto Campos,\\Laura Gonzaga,
     Leonardo Sá Silveira Lima, Thiago Rocha}
   \IEEEauthorblockA{INF2921 / CIS2114 --- PUC-Rio\\
-    Maio de 2026}
+    Junho de 2026}
 }
 
 % ===========================================================
@@ -48,8 +48,8 @@
   a proposta do Grupo~E: um assistente conversacional baseado em
   \textit{Retrieval-Augmented Generation} (RAG) que permite consultar
   protocolos em linguagem natural com respostas fundamentadas nas
-  fontes oficiais. São apresentados dois casos de uso, além dos
-  requisitos funcionais e não funcionais iniciais do sistema.
+  fontes oficiais. Neste relatório é detalhado o processo de concepção e construção inicial do sistema, assim como casos de uso e
+  requisitos funcionais e não funcionais do sistema.
 \end{abstract}
 
 \IEEEpeerreviewmaketitle
@@ -72,8 +72,9 @@ conversacional baseado em \textit{Retrieval-Augmented Generation}
 (RAG) voltado a profissionais do SUS. As seções seguintes discutem
 as soluções existentes (Seção~\ref{sec:related}), a arquitetura
 proposta (Seção~\ref{sec:methods}), os requisitos iniciais
-(Seção~\ref{sec:req}) e os casos de uso ilustrativos
-(Seção~\ref{sec:results}).
+(Seção~\ref{sec:req}), os casos de uso ilustrativos
+(Seção~\ref{sec:results}) e os resultados iniciais do protótipo
+(Seção~\ref{sec:resultados}).
 
 % ------------------------------------------------------------------
 
@@ -153,6 +154,12 @@ fragmentos de maior similaridade do cosseno,
 são concatenados ao prompt enviado ao LLM, que formula a resposta
 final com referências explícitas às fontes consultadas.
 
+O fluxo descrito foi implementado em um protótipo inicial, organizado em duas etapas: a ingestão, executada uma única vez por guia, e a geração, executada a cada pergunta do profissional.
+
+Na etapa de ingestão, dois Guias de Referência Rápida foram utilizados como exemplo --- Diabetes Mellitus e Pré-Natal. Cada guia é dividido página a página, gerando em memória um PDF de página única para cada uma delas. Cada página é então vetorizada pelo modelo \texttt{gemini-embedding-2-preview}, escolhido por aceitar PDF como entrada e gerar o vetor a partir do texto, das tabelas, das imagens e do layout da página simultaneamente, dispensando a extração de texto como insumo direto para a vetorização, aspecto relevante para guias clínicos, ricos em fluxogramas e tabelas que um extrator de texto puro tende a perder. O texto da página também é extraído separadamente e mantido como reserva, mas não é o que alimenta o vetor. Os vetores resultantes são gravados em uma coleção persistente no \textit{Chroma}, acompanhados de metadados de origem (guia, caminho do arquivo e número da página), de modo que a etapa de ingestão, a mais onerosa, por exigir uma chamada de API por página, seja executada uma única vez por documento.
+
+Na etapa de geração, a pergunta do profissional é codificada na mesma representação vetorial e utilizada para buscar, na coleção do Chroma, as $k$ páginas mais relevantes, com filtro opcional por guia. Os metadados das páginas recuperadas (arquivo e número da página) são então usados para localizar e recortar as páginas correspondentes no PDF original em disco; os bytes dessas páginas, em formato PDF, são enviados ao modelo multimodal \texttt{gemini-2.5-flash}, que lê a página diretamente e gera a resposta ao profissional. O conteúdo apresentado ao modelo é sempre relido do PDF original no momento da consulta já que o índice vetorial no Chroma serve apenas para localizar a página certa, não para fornecer o conteúdo da resposta. O \textit{prompt} instrui o modelo a citar explicitamente as páginas que fundamentam cada afirmação (no formato ``(pág.~N)'') e a indicar quando a resposta não está contida nas páginas fornecidas, evitando que o modelo complemente com conhecimento externo ao material recebido. O resultado é uma resposta acompanhada de referências que apontam para a página exata do guia correspondente, conforme ilustrado na Figura~\ref{fig:mockup}.
+
 \begin{table*}[!t]
   \centering
   \caption{Requisitos funcionais do sistema.}
@@ -213,6 +220,8 @@ e da obrigação de conformidade com a LGPD.
 \section{Casos de Uso}
 \label{sec:results}
 
+Foram elaborados 7 casos de uso da ferramenta, sendo os 2 primeiros elaborados pelo grupo e os outros 5 provenientes de entrevistas com 3 profissionais de saúde das áreas de Pediatria, Atendimento Intensivo e Clínica Geral:
+
 \subsection{Caso de Uso 1: Consulta de Protocolo Clínico}
 
 Um médico da Atenção Primária, durante uma consulta, questiona o
@@ -232,24 +241,404 @@ das vacinas indicadas pelo Programa Nacional de Imunizações (PNI),
 com doses, vias de administração e intervalos mínimos, referenciada
 à versão vigente do calendário oficial.
 
+\subsection{Caso de Uso 3: Estado Hiperosmolar Hiperglicêmico}
+ 
+Um médico relata o caso de um paciente de 47 anos com estado
+hiperosmolar hiperglicêmico e consulta o sistema durante o
+atendimento para confirmar a conduta indicada. O assistente
+recupera as páginas do Guia de Referência Rápida de Diabetes
+Mellitus que tratam da condição e apresenta a conduta
+recomendada, indicando a página de origem para verificação.
+ 
+\subsection{Caso de Uso 4: Cetoacidose Diabética Sintomática}
+ 
+Um médico questiona o sistema sobre o manejo de um quadro de
+cetoacidose diabética sintomática, com dor abdominal e dor
+periférica. O assistente recupera as páginas pertinentes do Guia
+de Referência Rápida de Diabetes Mellitus e apresenta a conduta
+recomendada, indicando a página de origem para verificação.
+ 
+\subsection{Caso de Uso 5: Poliúria em Paciente com Diabetes Tipo 2}
+ 
+Um médico consulta o sistema sobre a investigação de poliúria em
+uma paciente de 63 anos com diabetes tipo 2. O assistente recupera
+as páginas pertinentes do Guia de Referência Rápida de Diabetes
+Mellitus e apresenta a conduta recomendada, indicando a página de
+origem para verificação.
+ 
+\subsection{Caso de Uso 6: Abortamento com Sangramento}
+ 
+Um profissional consulta o sistema sobre o manejo de um processo
+de abortamento com sangramento em uma gestante de 24 anos. O
+assistente recupera os trechos pertinentes do Guia de Referência
+Rápida de Pré-Natal, apresenta a conduta indicada e a página
+correspondente, apoiando a decisão clínica sem que o profissional
+precise localizar manualmente a seção do guia.
+ 
+\subsection{Caso de Uso 7: Infecção Urinária em Gestante}
+ 
+Um profissional consulta o sistema sobre a conduta diante de uma
+infecção urinária em uma gestante de 31 anos. O assistente
+recupera os trechos pertinentes do Guia de Referência Rápida de
+Pré-Natal, apresenta a conduta indicada e a página correspondente,
+apoiando a decisão clínica sem que o profissional precise
+localizar manualmente a seção do guia.
+
+% ------------------------------------------------------------------
+
+\section{Resultados Iniciais}
+\label{sec:resultados}
+
+A partir das entrevistas realizadas com os profissionais de
+saúde, além de elaborar os casos de uso apresentados
+anteriormente, utilizamos as perguntas sugeridas pelos médicos
+como teste do sistema. A seguir são apresentadas as respostas
+dadas.
+
+\subsection{Resultado 1: Estado Hiperosmolar Hiperglicêmico}
+
+\noindent\textit{Pergunta:} ``Estou com um paciente homem de 47
+anos com estado hiperosmolar hiperglicêmico, como posso
+proceder?''
+
+\medskip
+\noindent\textit{Resposta do sistema:}
+
+Para um paciente homem de 47 anos com estado hiperosmolar
+hiperglicêmico (Síndrome Hiperglicêmica Hiperosmolar Não
+Cetótica - SHH), deve-se proceder da seguinte forma:
+
+\begin{enumerate}
+  \item \textbf{Tratamento imediato:}
+  \begin{itemize}
+    \item Correção da desidratação, dos distúrbios eletrolíticos
+          e da hiperosmolaridade sérica (pág. 101).
+    \item Correção da hiperglicemia (pág. 101).
+    \item Identificação e tratamento dos fatores precipitantes
+          (pág. 101).
+  \end{itemize}
+  \item \textbf{Encaminhamento:}
+  \begin{itemize}
+    \item Em caso de suspeita de SHH, solicitar Vaga Zero para
+          confirmação do diagnóstico e internação (pág. 101).
+  \end{itemize}
+\end{enumerate}
+
+A SHH é uma complicação grave do diabetes mellitus, caracterizada
+por hiperglicemia severa (glicemia superior a 600mg/dL),
+hiperosmolaridade (osmolaridade sérica efetiva superior a
+320mOsm/L) e desidratação, na ausência de cetoacidose (pH > 7,3
+e bicarbonato > 18mEq/L) (pág. 99, 100). Hipercalemia também é
+frequente (pág. 100). Tipicamente ocorre em adultos e idosos com
+DM tipo 2 (pág. 100).
+
+Os sinais e sintomas relacionados à hiperglicemia e ao aumento da
+osmolaridade sérica incluem poliúria, polidipsia, fraqueza,
+turvação visual e declínio progressivo do nível de consciência.
+Em quadros mais graves, podem ocorrer sintomas neurológicos
+focais, convulsões, hipotensão, choque e/ou insuficiência renal
+aguda (pág. 100). Fatores precipitantes comuns são quadros
+infecciosos, eventos cardiovasculares, patologias agudas clínicas
+ou cirúrgicas e uso de certos medicamentos (pág. 100).
+
+\textit{Fontes:}
+\begin{itemize}
+  \item {Guia Rápido Diabetes} --- pág. 49 (score=0.5241)
+  \item {Guia Rápido Diabetes} --- pág. 100 (score=0.5360)
+  \item {Guia Rápido Diabetes} --- pág. 101 (score=0.5424)
+  \item {Guia Rápido Diabetes} --- pág. 8 (score=0.5506)
+  \item {Guia Rápido Diabetes} --- pág. 98 (score=0.5508)
+  \item {Guia Rápido Diabetes} --- pág. 102 (score=0.5548)
+  \item {Guia Rápido Diabetes} --- pág. 62 (score=0.5576)
+  \item {Guia Rápido Diabetes} --- pág. 47 (score=0.5626)
+  \item {Guia Rápido Pré Natal} --- pág. 78 (score=0.5629)
+  \item {Guia Rápido Diabetes} --- pág. 64 (score=0.5680)
+\end{itemize}
+
+\medskip
+\noindent\textit{Observações:} esta foi a única das cinco
+consultas em que o número de páginas recuperadas precisou ser
+ampliado (de $k=5$ para $k=10$) para que a resposta cobrisse
+adequadamente o quadro clínico; nota-se também a recuperação de
+uma página do Guia de Pré-Natal (pág. 78) sem relação direta com
+a pergunta, não utilizada na resposta final.
+
+\subsection{Resultado 2: Cetoacidose Diabética Sintomática}
+
+\noindent\textit{Pergunta:} ``Como proceder com um paciente com
+cetoacidose sintomática com fortes dores abdominais e na região
+periférica?''
+
+\medskip
+\noindent\textit{Resposta do sistema:}
+
+Um paciente com cetoacidose sintomática e fortes dores abdominais
+apresenta sinais que indicam a possibilidade de Cetoacidose
+Diabética (CAD), uma complicação grave que exige remoção imediata
+para unidades de emergência (pág. 97).
+
+Deve-se proceder com:
+\begin{itemize}
+  \item \textbf{Encaminhamento imediato:} A dor abdominal é um
+        dos sintomas que indicam a possibilidade de CAD, exigindo
+        encaminhamento imediato ao serviço de emergência. Em caso
+        de suspeita de CAD, deve-se solicitar Vaga Zero para
+        confirmação do diagnóstico e internação (pág. 99). Se a
+        glicemia capilar for maior ou igual a 300mg/dL, deve-se
+        considerar Vaga Zero (pág. 111).
+  \item \textbf{Tratamento:} As diretrizes de tratamento para CAD
+        incluem (pág. 99):
+  \begin{itemize}
+    \item Manutenção das vias aéreas pérvias;
+    \item Correção da desidratação;
+    \item Correção dos distúrbios eletrolíticos e acidobásicos;
+    \item Redução da hiperglicemia e da osmolalidade;
+    \item Identificação e tratamento do fator precipitante.
+  \end{itemize}
+\end{itemize}
+
+As páginas fornecidas não contêm informações específicas sobre
+como proceder com dor na região periférica em casos de
+cetoacidose sintomática.
+
+\textit{Fontes:}
+\begin{itemize}
+  \item {Guia Rápido Diabetes} --- pág. 100 (score=0.5029)
+  \item {Guia Rápido Diabetes} --- pág. 112 (score=0.5383)
+  \item {Guia Rápido Diabetes} --- pág. 98 (score=0.5395)
+  \item {Guia Rápido Diabetes} --- pág. 8 (score=0.5423)
+  \item {Guia Rápido Diabetes} --- pág. 49 (score=0.5497)
+\end{itemize}
+
+\medskip
+\noindent\textit{Observações:} o sistema sinaliza explicitamente
+a ausência de informação sobre a dor periférica relatada na
+pergunta, em vez de extrapolar além do material indexado,
+ilustrando o comportamento esperado pelo requisito RNF04.
+
+\subsection{Resultado 3: Poliúria em Paciente com Diabetes Tipo 2}
+
+\noindent\textit{Pergunta:} ``Como proceder com uma paciente
+mulher, 63 anos, diabética tipo 2, que está com quadro de
+poliúria?''
+
+\medskip
+\noindent\textit{Resposta do sistema:}
+
+Com base nas páginas anexadas, a poliúria é um sintoma típico de
+DM2 e um sintoma de hiperglicemia aguda/insulinopenia (pág. 48,
+pág. 62).
+
+Nesse caso, a conduta deve ser:
+\begin{enumerate}
+  \item \textbf{Avaliar o início de insulina e individualizar o
+        plano de cuidado} (pág. 48).
+  \item \textbf{Iniciar insulina NPH} na dose de 10UI (0,2UI/kg)
+        antes de deitar. Deve-se \textbf{manter a sulfonilureia e
+        a metformina}, se o paciente já estiver em uso e não
+        houver contraindicação (pág. 62).
+  \item \textbf{Aferir a glicemia capilar em jejum para ajuste},
+        realizando ajustes a cada 3 dias até alcançar a meta
+        (pág. 62). Se a dose noturna for maior que 30UI,
+        fracionar (metade antes do café e metade antes de
+        deitar), suspender a sulfonilureia e manter a metformina
+        (pág. 62).
+\end{enumerate}
+
+É importante notar que a poliúria também é mencionada como um
+sintoma de descompensação do diabetes (pág. 22). Embora as
+páginas mencionem a poliúria em contextos de emergência como CAD
+(Cetoacidose Diabética) em pacientes com glicemias >200mg/dL
+(pág. 99), a pergunta foca na poliúria como sintoma em uma
+paciente já diagnosticada com DM2, o que, conforme as figuras,
+leva à avaliação e início de insulina.
+
+\textit{Fontes:}
+\begin{itemize}
+  \item {Guia Rápido Diabetes} --- pág. 49 (score=0.5096)
+  \item {Guia Rápido Diabetes} --- pág. 63 (score=0.5123)
+  \item {Guia Rápido Diabetes} --- pág. 23 (score=0.5271)
+  \item {Guia Rápido Diabetes} --- pág. 100 (score=0.5314)
+  \item {Guia Rápido Diabetes} --- pág. 22 (score=0.5320)
+\end{itemize}
+
+\medskip
+\noindent\textit{Observações:} o sistema diferenciou
+corretamente o quadro de poliúria como sintoma de descompensação
+crônica do quadro de poliúria em contexto de emergência (CAD),
+justificando explicitamente a interpretação escolhida com base na
+ausência de outros sinais de emergência na pergunta.
+
+\subsection{Resultado 4: Abortamento com Sangramento}
+
+\noindent\textit{Pergunta:} ``Como proceder com uma paciente
+mulher de 24 anos, gestante, que está passando por um processo de
+abortamento com extravasamento sanguíneo?''
+
+\medskip
+\noindent\textit{Resposta do sistema:}
+
+Para uma paciente gestante de 24 anos que está passando por um
+processo de abortamento com extravasamento sanguíneo, a conduta
+é:
+\begin{enumerate}
+  \item \textbf{Em caso de ``Trabalho de abortamento''}
+        (caracterizado por sangramento vaginal ativo, colo
+        entreaberto ou dilatado, com ou sem dor), a gestante deve
+        ser encaminhada via Vaga Zero para a emergência
+        obstétrica. Se a gestação for até 12 semanas, o
+        encaminhamento é via SISREG (pág. 24).
+  \item \textbf{Se for um ``Abortamento incompleto''} (com
+        sangramento mais volumoso que na ameaça de abortamento,
+        dores intensas e orifício do colo uterino aberto), a
+        conduta é encaminhar para avaliação via Vaga Zero
+        (pág. 134).
+  \item \textbf{Se for uma ``Ameaça de abortamento''} (com
+        sangramento genital de intensidade pequena a moderada,
+        volume uterino compatível com a idade gestacional e
+        orifício do colo uterino fechado), deve-se considerar a
+        necessidade de encaminhar para avaliação em maternidade
+        via Vaga Zero, solicitar USG, manter a gestante em
+        repouso, evitar relações sexuais e avaliar a necessidade
+        de analgésicos em caso de dor significativa (pág. 133).
+  \item \textbf{Em caso de ``Abortamento retido''} ou
+        \textbf{``Abortamento infectado''}, também se deve
+        encaminhar para avaliação via Vaga Zero (pág. 134).
+\end{enumerate}
+
+Dado que a paciente está ``passando por um processo de
+abortamento com extravasamento sanguíneo'', a conduta mais
+provável e urgente, de acordo com as páginas fornecidas, é o
+\textbf{encaminhamento para avaliação via Vaga Zero para a
+emergência obstétrica} (pág. 24, 134), a menos que se confirme
+ser um abortamento completo e não haja sinais de complicação.
+
+\textit{Fontes:}
+\begin{itemize}
+  \item {Guia Rápido Pré Natal} --- pág. 134 (score=0.4963)
+  \item {Guia Rápido Pré Natal} --- pág. 135 (score=0.5189)
+  \item {Guia Rápido Pré Natal} --- pág. 25 (score=0.5195)
+  \item {Guia Rápido Pré Natal} --- pág. 136 (score=0.5424)
+  \item {Guia Rápido Pré Natal} --- pág. 19 (score=0.5577)
+\end{itemize}
+
+\medskip
+\noindent\textit{Observações:} o sistema cobriu as quatro
+classificações de abortamento previstas no guia antes de
+concluir pela conduta mais provável dado o quadro descrito,
+explicitando a ressalva de que a confirmação do tipo exato de
+abortamento poderia alterar o encaminhamento.
+
+\subsection{Resultado 5: Infecção Urinária em Gestante}
+
+\noindent\textit{Pergunta:} ``Como proceder com uma paciente
+mulher de 31 anos, gestante, que está com infecção urinária?''
+
+\medskip
+\noindent\textit{Resposta do sistema:}
+
+Para proceder com uma paciente mulher de 31 anos, gestante, com
+infecção urinária (cistite aguda), deve-se considerar o seguinte,
+com base nas páginas fornecidas:
+
+\begin{enumerate}
+  \item \textbf{Diagnóstico e Início do Tratamento:}
+  \begin{itemize}
+    \item A cistite aguda é caracterizada por sintomas como
+          disúria, polaciúria, incontinência urinária, dor
+          suprapúbica e hematúria. Não deve haver febre,
+          taquicardia, dor abdominal intensa, dor lombar,
+          calafrios, náuseas ou vômitos; a presença desses sinais
+          pode indicar pielonefrite (pág. 64).
+    \item Não se deve aguardar o resultado de exames para
+          iniciar o tratamento quando o quadro é sugestivo
+          (pág. 64).
+    \item O EAS pode evidenciar leucocitúria (acima de 10
+          leucócitos por campo) e hematúria. A urocultura
+          apresenta mais de 100 mil UFC/ml (pág. 64).
+  \end{itemize}
+  \item \textbf{Tratamento Antibiótico (Duração de 7 dias para
+        todos):}
+  \begin{itemize}
+    \item \textbf{Nitrofurantoína (B):} 100mg de 6/6h (pág. 64).
+    \item \textbf{Cefalexina (B):} 500mg de 6/6h (pág. 64).
+    \item \textbf{Amoxicilina (B):} 500mg de 8/8h (pág. 64).
+    \item \textbf{Sulfametoxazol + trimetoprima (C):} 400mg +
+          80mg, 2 comprimidos de 12/12 horas. Este medicamento
+          possui observações importantes:
+    \begin{itemize}
+      \item Usar em caso de Escherichia coli resistente
+            (pág. 64).
+      \item Evitar no primeiro trimestre e após a 32ª semana de
+            gestação (pág. 64).
+      \item Reforçar a importância da suplementação do ácido
+            fólico 5mg/dia durante o tratamento (pág. 64).
+    \end{itemize}
+  \end{itemize}
+  \item \textbf{Atenção para Pielonefrite:}
+  \begin{itemize}
+    \item Caso haja suspeita de pielonefrite (febre, taquicardia,
+          calafrios, náusea, vômitos e dor lombar com sinal de
+          Giordano positivo), a gestante deve ser encaminhada
+          para avaliação hospitalar via Vaga Zero (pág. 65).
+  \end{itemize}
+  \item \textbf{Acompanhamento:}
+  \begin{itemize}
+    \item A urocultura deve ser repetida duas semanas após o
+          tratamento e mensalmente até o final da gestação
+          (pág. 64).
+  \end{itemize}
+\end{enumerate}
+
+\textit{Observação importante:} Em caso de EAS alterado em
+pacientes assintomáticas e com urocultura negativa, o tratamento
+para ITU não é indicado (pág. 64). A questão menciona ``infecção
+urinária'', o que pressupõe a presença de sintomas.
+
+\textit{Fontes:}
+\begin{itemize}
+  \item {Guia Rápido Pré Natal} --- pág. 65 (score=0.4890)
+  \item {Guia Rápido Pré Natal} --- pág. 66 (score=0.5194)
+  \item {Guia Rápido Pré Natal} --- pág. 64 (score=0.5232)
+  \item {Guia Rápido Pré Natal} --- pág. 35 (score=0.5495)
+  \item {Guia Rápido Pré Natal} --- pág. 95 (score=0.5508)
+\end{itemize}
+
+\medskip
+\noindent\textit{Observações:} a resposta detalhou esquema
+posológico completo e ressalvou explicitamente a contraindicação
+de sulfametoxazol + trimetoprima conforme o trimestre gestacional,
+sem necessidade de ampliação do número de páginas recuperadas.
+
 % ------------------------------------------------------------------
 
 \section{Próximas Etapas}
 \label{sec:next}
 
-O presente relatório situa o projeto no TRL~1, com a proposta
-conceitual formalizada em requisitos e casos de uso. As etapas
-previstas são:
+Entrevistas iniciais com quatro profissionais de saúde da Atenção
+Primária (um médico, duas enfermeiras e um fonoaudiólogo) indicam
+que a integração ao fluxo de trabalho existente é tão relevante
+quanto a qualidade das respostas geradas. Um dos profissionais
+sugere uma extensão de navegador que exiba o assistente lado a
+lado com o prontuário eletrônico do paciente, permitindo copiar
+trechos da resposta diretamente para o registro clínico sem
+alternar entre janelas. Os mesmos profissionais apontam que, em
+versões futuras, o sistema poderia receber como contexto
+anonimizado condições que exigem atenção redobrada (idade
+avançada, gestação, infância, comorbidades), tornando as
+recomendações mais precisas e sinalizando pontos de atenção do
+protocolo, exames e prescrições que não devem ser esquecidos.
 
-\begin{enumerate}[label=\arabic*.]
-  \item \textbf{Protótipo de recuperação} (TRL~2): indexação de um
-        subconjunto dos Guias de Referência Rápida em uma base vetorial
-        local e avaliação qualitativa da relevância dos fragmentos
-        recuperados.
-  \item \textbf{Validação com usuários} (TRL~3): sessões de uso com
-        profissionais de saúde para aferir usabilidade e corretude
-        percebida das respostas geradas.
-\end{enumerate}
+Os mesmos profissionais enfatizam que o sistema não deve, em
+hipótese alguma, fundamentar respostas em protocolos de outras
+localidades ou países (Reino Unido, União Europeia, Estados
+Unidos), quando a informação não estiver disponível na base
+indexada, o sistema deve avisar explicitamente em vez de
+complementar a resposta com conhecimento externo ao material
+indexado. Esse comportamento reforça o requisito RNF04
+(Tabela~\ref{tab:req-nfunc}) e orienta a priorização de RF03 e
+RF07, que garantem rastreabilidade até a página exata do
+protocolo municipal consultado.
 
 % ---------- Referências ------------------------------------
 \bibliographystyle{IEEEtran}
