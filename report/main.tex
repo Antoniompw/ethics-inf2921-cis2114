@@ -220,69 +220,95 @@ e da obrigação de conformidade com a LGPD.
 \section{Casos de Uso}
 \label{sec:results}
 
-Foram elaborados 7 casos de uso da ferramenta, sendo os 2 primeiros elaborados pelo grupo e os outros 5 provenientes de entrevistas com 3 profissionais de saúde das áreas de Pediatria, Atendimento Intensivo e Clínica Geral:
+Foram elaborados 8 casos de uso da ferramenta, sendo os 3 primeiros elaborados pelo grupo e os outros 5 provenientes de entrevistas com 3 profissionais de saúde das áreas de Pediatria, Atendimento Intensivo e Clínica Geral:
 
 \subsection{Caso de Uso 1: Consulta de Protocolo Clínico}
 
-Um médico da Atenção Primária, durante uma consulta, questiona o
-sistema sobre o protocolo de tratamento para hipertensão arterial
-sistêmica sem comorbidades. O assistente recupera os trechos
-pertinentes do Guia de Referência Rápida da SMS e apresenta a
-conduta recomendada com indicação da página e versão do documento,
-sem que o profissional precise interromper o atendimento para abrir
-o PDF manualmente.
+\begin{description}
+  \item[Ator] Médico da Atenção Primária.
+  \item[Objetivo] Confirmar a conduta terapêutica para hipertensão arterial sistêmica sem comorbidades durante o atendimento.
+  \item[Pré-condição] Consulta médica em andamento; Guia de Referência Rápida da SMS indexado na base vetorial.
+  \item[Cenário] Um médico da Atenção Primária, durante uma consulta, questiona o sistema sobre o protocolo de tratamento para hipertensão arterial sistêmica sem comorbidades. O assistente recupera os trechos pertinentes do Guia de Referência Rápida da SMS e apresenta a conduta recomendada com indicação da página e versão do documento, sem que o profissional precise interromper o atendimento para abrir o PDF manualmente.
+  \item[Pós-condição] Conduta terapêutica obtida com página e versão do documento indicadas, sem interrupção do atendimento.
+  \item[Requisitos relacionados] RF01, RF02, RF03, RF07, RNF01, RNF02.
+\end{description}
 
 \subsection{Caso de Uso 2: Consulta do Calendário de Vacinação}
 
-Uma enfermeira de UBS precisa confirmar o esquema vacinal para
-uma criança de 15 meses que chegou sem cartão de vacinação. Ao
-descrever a situação ao assistente, recebe uma lista estruturada
-das vacinas indicadas pelo Programa Nacional de Imunizações (PNI),
-com doses, vias de administração e intervalos mínimos, referenciada
-à versão vigente do calendário oficial.
+\begin{description}
+  \item[Ator] Enfermeira de UBS.
+  \item[Objetivo] Confirmar o esquema vacinal de uma criança sem cartão de vacinação.
+  \item[Pré-condição] Criança de 15 meses presente na unidade, sem cartão de vacinação; calendário vigente do PNI indexado.
+  \item[Cenário] Uma enfermeira de UBS precisa confirmar o esquema vacinal para uma criança de 15 meses que chegou sem cartão de vacinação. Ao descrever a situação ao assistente, recebe uma lista estruturada das vacinas indicadas pelo Programa Nacional de Imunizações (PNI), com doses, vias de administração e intervalos mínimos, referenciada à versão vigente do calendário oficial.
+  \item[Pós-condição] Lista estruturada de vacinas indicadas, com doses, vias e intervalos, obtida e referenciada à versão vigente.
+  \item[Requisitos relacionados] RF01, RF02, RF03, RF07.
+\end{description}
 
-\subsection{Caso de Uso 3: Estado Hiperosmolar Hiperglicêmico}
- 
-Um médico relata o caso de um paciente de 47 anos com estado
-hiperosmolar hiperglicêmico e consulta o sistema durante o
-atendimento para confirmar a conduta indicada. O assistente
-recupera as páginas do Guia de Referência Rápida de Diabetes
-Mellitus que tratam da condição e apresenta a conduta
-recomendada, indicando a página de origem para verificação.
- 
-\subsection{Caso de Uso 4: Cetoacidose Diabética Sintomática}
- 
-Um médico questiona o sistema sobre o manejo de um quadro de
-cetoacidose diabética sintomática, com dor abdominal e dor
-periférica. O assistente recupera as páginas pertinentes do Guia
-de Referência Rápida de Diabetes Mellitus e apresenta a conduta
-recomendada, indicando a página de origem para verificação.
- 
-\subsection{Caso de Uso 5: Poliúria em Paciente com Diabetes Tipo 2}
- 
-Um médico consulta o sistema sobre a investigação de poliúria em
-uma paciente de 63 anos com diabetes tipo 2. O assistente recupera
-as páginas pertinentes do Guia de Referência Rápida de Diabetes
-Mellitus e apresenta a conduta recomendada, indicando a página de
-origem para verificação.
- 
-\subsection{Caso de Uso 6: Abortamento com Sangramento}
- 
-Um profissional consulta o sistema sobre o manejo de um processo
-de abortamento com sangramento em uma gestante de 24 anos. O
-assistente recupera os trechos pertinentes do Guia de Referência
-Rápida de Pré-Natal, apresenta a conduta indicada e a página
-correspondente, apoiando a decisão clínica sem que o profissional
-precise localizar manualmente a seção do guia.
- 
-\subsection{Caso de Uso 7: Infecção Urinária em Gestante}
- 
-Um profissional consulta o sistema sobre a conduta diante de uma
-infecção urinária em uma gestante de 31 anos. O assistente
-recupera os trechos pertinentes do Guia de Referência Rápida de
-Pré-Natal, apresenta a conduta indicada e a página correspondente,
-apoiando a decisão clínica sem que o profissional precise
-localizar manualmente a seção do guia.
+\subsection{Caso de Uso 3: Apoio à Decisão sobre Manual Clínico de Pré-Natal}
+
+\begin{description}
+  \item[Ator] Gestor municipal de saúde.
+  \item[Objetivo] Definir, entre manuais clínicos de municípios distintos, qual adotar, usando a taxa de mortalidade materna como critério de comparação.
+  \item[Pré-condição] Integração do sistema com o Data Zoom Saúde disponível; dados de nascidos vivos e óbitos maternos disponíveis para os municípios consultados.
+  \item[Cenário] Um gestor municipal de saúde deseja decidir qual Manual Clínico de Pré-Natal adotar e pergunta ao sistema: ``Entre os municípios do Rio de Janeiro, São Paulo e Belo Horizonte, qual possui menor taxa de mortalidade materna?''. O sistema consulta os dados do Data Zoom Saúde via MCP, identifica a quantidade de nascidos vivos e de óbitos maternos nos municípios indicados e retorna a taxa de mortalidade materna calculada para cada um. O gestor utiliza essa taxa como um dos critérios para escolher o manual clínico do município com melhor indicador.
+  \item[Pós-condição] Taxas de mortalidade materna por município retornadas; gestor utiliza o indicador como critério de decisão sobre o manual a adotar.
+  \item[Requisitos relacionados] RF06.
+\end{description}
+
+\subsection{Caso de Uso 4: Estado Hiperosmolar Hiperglicêmico}
+
+\begin{description}
+  \item[Ator] Médico.
+  \item[Objetivo] Confirmar a conduta para paciente com estado hiperosmolar hiperglicêmico.
+  \item[Pré-condição] Atendimento em curso; Guia de Referência Rápida de Diabetes Mellitus indexado.
+  \item[Cenário] Um médico relata o caso de um paciente de 47 anos com estado hiperosmolar hiperglicêmico e consulta o sistema durante o atendimento para confirmar a conduta indicada. O assistente recupera as páginas do Guia de Referência Rápida de Diabetes Mellitus que tratam da condição e apresenta a conduta recomendada, indicando a página de origem para verificação.
+  \item[Pós-condição] Conduta recomendada obtida, com página de origem indicada.
+  \item[Requisitos relacionados] RF01, RF02, RF03, RF07.
+\end{description}
+
+\subsection{Caso de Uso 5: Cetoacidose Diabética Sintomática}
+
+\begin{description}
+  \item[Ator] Médico.
+  \item[Objetivo] Confirmar a conduta para cetoacidose diabética sintomática com dor abdominal e periférica.
+  \item[Pré-condição] Atendimento em curso; Guia de Referência Rápida de Diabetes Mellitus indexado.
+  \item[Cenário] Um médico questiona o sistema sobre o manejo de um quadro de cetoacidose diabética sintomática, com dor abdominal e dor periférica. O assistente recupera as páginas pertinentes do Guia de Referência Rápida de Diabetes Mellitus e apresenta a conduta recomendada, indicando a página de origem para verificação.
+  \item[Pós-condição] Conduta recomendada obtida, com página de origem indicada.
+  \item[Requisitos relacionados] RF01, RF02, RF03, RF07, RNF04.
+\end{description}
+
+\subsection{Caso de Uso 6: Poliúria em Paciente com Diabetes Tipo 2}
+
+\begin{description}
+  \item[Ator] Médico.
+  \item[Objetivo] Investigar conduta para poliúria em paciente com diabetes tipo 2.
+  \item[Pré-condição] Atendimento em curso; Guia de Referência Rápida de Diabetes Mellitus indexado.
+  \item[Cenário] Um médico consulta o sistema sobre a investigação de poliúria em uma paciente de 63 anos com diabetes tipo 2. O assistente recupera as páginas pertinentes do Guia de Referência Rápida de Diabetes Mellitus e apresenta a conduta recomendada, indicando a página de origem para verificação.
+  \item[Pós-condição] Conduta recomendada obtida, com página de origem indicada.
+  \item[Requisitos relacionados] RF01, RF02, RF03, RF07.
+\end{description}
+
+\subsection{Caso de Uso 7: Abortamento com Sangramento}
+
+\begin{description}
+  \item[Ator] Profissional de saúde.
+  \item[Objetivo] Confirmar a conduta diante de abortamento com sangramento em gestante.
+  \item[Pré-condição] Atendimento em curso; Guia de Referência Rápida de Pré-Natal indexado.
+  \item[Cenário] Um profissional consulta o sistema sobre o manejo de um processo de abortamento com sangramento em uma gestante de 24 anos. O assistente recupera os trechos pertinentes do Guia de Referência Rápida de Pré-Natal, apresenta a conduta indicada e a página correspondente, apoiando a decisão clínica sem que o profissional precise localizar manualmente a seção do guia.
+  \item[Pós-condição] Conduta indicada obtida, com página correspondente, sem busca manual no guia.
+  \item[Requisitos relacionados] RF01, RF02, RF03, RF07.
+\end{description}
+
+\subsection{Caso de Uso 8: Infecção Urinária em Gestante}
+
+\begin{description}
+  \item[Ator] Profissional de saúde.
+  \item[Objetivo] Confirmar a conduta diante de infecção urinária em gestante.
+  \item[Pré-condição] Atendimento em curso; Guia de Referência Rápida de Pré-Natal indexado.
+  \item[Cenário] Um profissional consulta o sistema sobre a conduta diante de uma infecção urinária em uma gestante de 31 anos. O assistente recupera os trechos pertinentes do Guia de Referência Rápida de Pré-Natal, apresenta a conduta indicada e a página correspondente, apoiando a decisão clínica sem que o profissional precise localizar manualmente a seção do guia.
+  \item[Pós-condição] Conduta indicada obtida, com página correspondente, sem busca manual no guia.
+  \item[Requisitos relacionados] RF01, RF02, RF03, RF07.
+\end{description}
 
 % ------------------------------------------------------------------
 
